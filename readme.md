@@ -1,164 +1,43 @@
 # AI Customer Support Copilot
 
-A simple AI customer support assistant built using **LangChain, RAG, and Hugging Face**.
+A professional RAG-based customer support assistant that lets users upload their own PDF/TXT files and ask questions based only on those documents.
 
-The project uses a company's support documentation and policies to answer customer questions using relevant information from the knowledge base.
-
-The goal is to build a practical **Retrieval-Augmented Generation (RAG)** application instead of a generic chatbot.
-
----
-
-## What This Project Does
-
-A customer asks a support question.
-
-The system:
-
-```text
-Customer Question
-       ↓
-Query Embedding
-       ↓
-Search Knowledge Base
-       ↓
-Retrieve Relevant Documents
-       ↓
-Send Context + Question to LLM
-       ↓
-Generate Answer
-```
-
-For example:
-
-**Customer:**
-
-> Can I get a refund for my subscription?
-
-The system searches the company's refund and subscription policies and uses the retrieved information to generate an answer.
-
----
-
-## Why RAG?
-
-A normal LLM only relies on the information it learned during training or information provided in the prompt.
-
-That is not enough for company-specific support questions.
-
-For example:
-
-```text
-Company Refund Policy:
-Customers can request a refund within 14 days of purchase.
-```
-
-The LLM may not know this company-specific rule.
-
-RAG solves this by retrieving the relevant company information and providing it to the model at runtime.
-
-```text
-Company Documents
-       ↓
-    Chunking
-       ↓
-   Embeddings
-       ↓
- Vector Database
-       ↓
-   Retrieval
-       ↓
-Relevant Context
-       ↓
-      LLM
-       ↓
-Support Answer
-```
+This version is designed for document-specific support use cases, where the knowledge base is created from the files selected by the user instead of a fixed company folder.
 
 ---
 
 ## Features
 
-* Load support documentation
-* Split documents into smaller chunks
-* Generate embeddings
-* Store embeddings in a vector store
-* Perform semantic search
-* Retrieve relevant support information
-* Generate answers using an LLM
-* Use LangChain to connect the RAG components
-* Use Hugging Face for the LLM and embedding model
+- Upload multiple PDF and TXT files
+- Drag-and-drop file input in the UI
+- Build a vector database from uploaded documents only
+- Ask questions against the uploaded file content
+- Keep answers grounded in the supplied files
+- Clear chat history and rebuild the knowledge base anytime
+- Simple Python + Streamlit application
 
 ---
 
-## Knowledge Base
+## Tech Stack
 
-The project uses simple text files as the company's knowledge base.
-
-Example:
-
-```text
-data/
-└── knowledge_base/
-    ├── billing_policy.txt
-    ├── refund_policy.txt
-    ├── subscription_policy.txt
-    └── escalation_policy.txt
-```
-
-These files contain fictional company policies that the RAG system can retrieve.
-
----
-
-## Example
-
-Suppose the knowledge base contains:
-
-```text
-Refund Policy
-
-Customers can request a refund within 14 days
-of their original purchase.
-
-Refund requests after 14 days are normally not
-eligible unless approved by a support manager.
-```
-
-The customer asks:
-
-```text
-I purchased the subscription 5 days ago.
-Can I get a refund?
-```
-
-The retriever finds the relevant refund policy.
-
-The LLM receives:
-
-```text
-Context:
-Customers can request a refund within 14 days
-of their original purchase.
-
-Question:
-I purchased the subscription 5 days ago.
-Can I get a refund?
-```
-
-The generated answer should be based on the retrieved company policy.
+- Python
+- Streamlit
+- LangChain
+- Hugging Face
+- FAISS
+- PyPDF
 
 ---
 
 ## Project Structure
 
 ```text
-ai-customer-support-copilot/
-│
-├── data/
-│   └── knowledge_base/
-│       ├── billing_policy.txt
-│       ├── refund_policy.txt
-│       ├── subscription_policy.txt
-│       └── escalation_policy.txt
-│
+AI-Customer-Support-Copilot/
+├── app.py
+├── main.py
+├── requirements.txt
+├── .env.example
+├── readme.md
 ├── src/
 │   ├── __init__.py
 │   ├── ingestion.py
@@ -168,56 +47,116 @@ ai-customer-support-copilot/
 │   ├── prompts.py
 │   ├── llm.py
 │   └── rag_pipeline.py
-│
-├── main.py
-│
-├── .env
-├── .gitignore
-├── requirements.txt
-└── README.md
+├── tests/
+│   ├── __init__.py
+│   └── test_document_ingestion.py
+└── data/
+    └── knowledge_base/
+        (kept only as a legacy folder and not used by the app)
 ```
-
-### File Responsibilities
-
-**`ingestion.py`**
-
-Loads the knowledge-base documents and splits them into chunks.
-
-**`embeddings.py`**
-
-Loads the Hugging Face embedding model and converts text into vectors.
-
-**`vectorstore.py`**
-
-Creates and manages the vector store used for similarity search.
-
-**`retriever.py`**
-
-Retrieves the most relevant document chunks for a user question.
-
-**`prompts.py`**
-
-Contains the prompt template used by the RAG system.
-
-**`llm.py`**
-
-Configures the Hugging Face language model.
-
-**`rag_pipeline.py`**
-
-Connects the retriever, prompt, and LLM into one RAG pipeline.
-
-**`main.py`**
-
-Runs the application and allows the user to ask support questions.
 
 ---
 
-## Technology Stack
+## Local Setup
 
-* Python
-* LangChain
-* Hugging Face
+### 1) Clone the repository
+
+```bash
+git clone https://github.com/AnmolCanCodes/AI-Customer-Support-Copilot.git
+cd AI-Customer-Support-Copilot
+```
+
+### 2) Create a virtual environment
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 3) Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4) Add your Hugging Face token
+
+Create a `.env` file in the project root:
+
+```env
+HF_TOKEN=your_huggingface_token_here
+```
+
+You can copy from `.env.example`:
+
+```bash
+cp .env.example .env
+```
+
+### 5) Run the app
+
+```bash
+python main.py
+```
+
+Then open the browser at:
+
+```text
+http://localhost:8501
+```
+
+---
+
+## How the app works
+
+1. You upload one or more PDF/TXT files
+2. The app reads the uploaded files
+3. The text is split into chunks
+4. Chunks are embedded and stored in FAISS
+5. You ask a question in the chat
+6. The app retrieves relevant chunks and sends them to the LLM
+7. The answer is generated from the uploaded file content only
+
+---
+
+## Testing
+
+Run the project tests with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Current test coverage includes uploaded file ingestion.
+
+
+
+## Production Tips
+
+- Keep your Hugging Face token in environment variables, not source code
+- Validate uploaded file types before processing
+- Limit upload size for public deployments
+- Add retry/error handling for failed LLM requests
+- Consider storing uploaded documents temporarily or in a secure storage bucket
+
+---
+
+## Troubleshooting
+
+### App does not answer questions
+
+Make sure `.env` has a valid `HF_TOKEN`.
+
+### App starts but no files are processed
+
+Ensure the uploaded file is a valid PDF or TXT file.
+
+
+---
+
+## License
+
+This project is for educational and demo purposes.
 * Hugging Face LLM
 * Hugging Face Embedding Model
 * Vector Store

@@ -6,3 +6,6 @@ huggingface-hub
 sentence-transformers
 python-dotenv
 faiss-cpu
+streamlit
+pypdf
+torchvision
