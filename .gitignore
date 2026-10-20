@@ -8,3 +8,5 @@ env.bak/
 venv.bak/
 __pycache__/
 node_modules/
+tests/__pycache__/
+tests/sample_tender_rfq_ai_platform.pdf

@@ -1,3 +1,5 @@
+import asyncio
+import inspect
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -11,11 +13,34 @@ KNOWLEDGE_BASE_DIR = BASE_DIR / 'data' / 'knowledge_base'
 
 
 def _read_uploaded_bytes(uploaded_file):
+    if hasattr(uploaded_file, 'content') and not callable(uploaded_file.content):
+        return uploaded_file.content
+
     if hasattr(uploaded_file, 'getvalue'):
         return uploaded_file.getvalue()
+
     if hasattr(uploaded_file, 'read'):
-        uploaded_file.seek(0)
+        read_method = uploaded_file.read
+        if inspect.iscoroutinefunction(read_method):
+            if hasattr(uploaded_file, 'seek') and inspect.iscoroutinefunction(uploaded_file.seek):
+                try:
+                    asyncio.run(uploaded_file.seek(0))
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    loop.run_until_complete(uploaded_file.seek(0))
+                    loop.close()
+            try:
+                return asyncio.run(read_method())
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                result = loop.run_until_complete(read_method())
+                loop.close()
+                return result
+
+        if hasattr(uploaded_file, 'seek'):
+            uploaded_file.seek(0)
         return uploaded_file.read()
+
     raise TypeError(f'Unsupported uploaded file object: {type(uploaded_file)}')
 
 
@@ -23,7 +48,7 @@ def load_documents_from_uploaded_files(uploaded_files):
     documents = []
 
     for uploaded_file in uploaded_files or []:
-        file_name = getattr(uploaded_file, 'name', 'uploaded_file')
+        file_name = getattr(uploaded_file, 'filename', getattr(uploaded_file, 'name', 'uploaded_file'))
         file_suffix = Path(file_name).suffix.lower()
         file_bytes = _read_uploaded_bytes(uploaded_file)
 

@@ -10,6 +10,22 @@ from src.rag_pipeline import create_rag_pipeline
 from src.vectorstore import create_vectorstore
 
 
+class BufferedUpload:
+    def __init__(self, name: str, content: bytes):
+        self.name = name
+        self.filename = name
+        self._content = content
+
+    def getvalue(self) -> bytes:
+        return self._content
+
+    def read(self) -> bytes:
+        return self._content
+
+    def seek(self, offset: int, whence: int = 0) -> None:
+        return None
+
+
 # Global in-memory state
 vectorstore: Any = None
 chat_history: Dict[str, List[Dict[str, str]]] = {}
@@ -81,7 +97,7 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 
     # Validate file types
     valid_extensions = {".pdf", ".txt"}
-    valid_files = []
+    buffered_files = []
     document_infos = []
 
     for file in files:
@@ -91,15 +107,16 @@ async def upload_documents(files: List[UploadFile] = File(...)):
                 status_code=400,
                 detail=f"Invalid file type: {file.filename}. Only PDF and TXT files are supported."
             )
-        valid_files.append(file)
+
+        file_bytes = await file.read()
+        buffered_files.append(BufferedUpload(file.filename, file_bytes))
         document_infos.append(
-            DocumentInfo(name=file.filename, size=len(await file.read()))
+            DocumentInfo(name=file.filename, size=len(file_bytes))
         )
-        await file.seek(0)  # Reset file pointer
 
     # Store uploaded files in a temporary global state for building
     global _uploaded_files
-    _uploaded_files = valid_files
+    _uploaded_files = buffered_files
 
     return UploadResponse(documents=document_infos, count=len(document_infos))
 
@@ -191,7 +208,14 @@ async def chat(request: ChatRequest):
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process question: {str(e)}")
+        message = str(e)
+        normalized = message.lower()
+        if "402" in message or "payment required" in normalized or "no remaining credits" in normalized or "credit" in normalized and "huggingface" in normalized:
+            raise HTTPException(
+                status_code=402,
+                detail="The configured Hugging Face model is unavailable because the token has no remaining credits or the model requires paid access. Add a valid token with available credits or switch to a local/free model."
+            )
+        raise HTTPException(status_code=500, detail=f"Failed to process question: {message}")
 
 
 @app.delete("/api/chat/{session_id}")

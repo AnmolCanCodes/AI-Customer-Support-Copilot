@@ -47,7 +47,7 @@ function App() {
   const handleBuild = async () => {
     setIsBuilding(true);
     try {
-      const response = await apiService.buildKnowledgeBase();
+      await apiService.buildKnowledgeBase();
       setKnowledgeBaseReady(true);
       setMessages([]);
     } catch (error) {
