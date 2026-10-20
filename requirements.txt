@@ -9,3 +9,6 @@ faiss-cpu
 streamlit
 pypdf
 torchvision
+fastapi
+uvicorn
+python-multipart

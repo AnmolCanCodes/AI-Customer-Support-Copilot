@@ -10,7 +10,8 @@ This project demonstrates practical implementation of:
 - Document ingestion and processing pipelines
 - Vector similarity search using FAISS
 - Context-aware LLM responses via LangChain
-- Real-time interactive web interface with Streamlit
+- Modern React + TypeScript frontend with Tailwind CSS
+- FastAPI backend for API integration
 
 ## 🏗️ Architecture
 
@@ -18,8 +19,9 @@ The application follows a modular architecture with clear separation of concerns
 
 ```
 AI-Customer-Support-Copilot/
-├── app.py                      # Streamlit web interface
-├── main.py                     # Application entry point
+├── api.py                      # FastAPI backend wrapper
+├── app.py                      # Legacy Streamlit interface (deprecated)
+├── main.py                     # Legacy Streamlit entry point (deprecated)
 ├── requirements.txt            # Python dependencies
 ├── .env.example               # Environment configuration template
 ├── README.md                  # This file
@@ -35,14 +37,39 @@ AI-Customer-Support-Copilot/
 ├── tests/                     # Unit tests
 │   ├── __init__.py
 │   └── test_document_ingestion.py
+├── frontend/                  # React + TypeScript frontend
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   │   ├── layout/       # Layout components (Sidebar)
+│   │   │   ├── chat/         # Chat components
+│   │   │   ├── documents/    # Document upload components
+│   │   │   └── ui/           # UI components
+│   │   ├── services/         # API service layer
+│   │   ├── types/            # TypeScript types
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── utils/            # Utility functions
+│   │   ├── App.tsx           # Main application component
+│   │   └── main.tsx          # Application entry point
+│   ├── package.json          # Frontend dependencies
+│   ├── vite.config.ts        # Vite configuration
+│   ├── tailwind.config.js    # Tailwind CSS configuration
+│   └── .env.example          # Frontend environment template
 └── data/                      # Data directory (legacy, not actively used)
     └── knowledge_base/
 ```
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Streamlit - Interactive web interface
-- **Backend**: Python 3.8+
+### Frontend
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **HTTP Client**: Axios
+
+### Backend
+- **API Layer**: FastAPI
+- **Python Version**: 3.8+
 - **LLM Framework**: LangChain - Orchestration and pipeline management
 - **Embeddings**: Hugging Face sentence-transformers
 - **Vector Database**: FAISS (Facebook AI Similarity Search)
@@ -54,6 +81,7 @@ AI-Customer-Support-Copilot/
 ### Prerequisites
 
 - Python 3.8 or higher
+- Node.js 18+ and npm
 - pip package manager
 - Hugging Face API token ([Get one here](https://huggingface.co/settings/tokens))
 
@@ -65,59 +93,93 @@ AI-Customer-Support-Copilot/
    cd AI-Customer-Support-Copilot
    ```
 
-2. **Create a virtual environment**
+2. **Backend Setup**
    ```bash
+   # Create virtual environment
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
 
-3. **Install dependencies**
-   ```bash
+   # Install Python dependencies
    pip install -r requirements.txt
-   ```
 
-4. **Configure environment variables**
-   ```bash
+   # Configure environment variables
    cp .env.example .env
    ```
-   
+
    Edit the `.env` file and add your Hugging Face token:
    ```env
    HF_TOKEN=your_huggingface_token_here
    ```
 
-5. **Run the application**
+3. **Frontend Setup**
    ```bash
-   python main.py
+   cd frontend
+
+   # Install Node dependencies
+   npm install
+
+   # Configure environment variables
+   cp .env.example .env
    ```
 
-6. **Access the application**
-   
+   The frontend `.env` file should contain:
+   ```env
+   VITE_API_BASE_URL=http://localhost:8000
+   ```
+
+4. **Run the Application**
+
+   **Terminal 1 - Backend:**
+   ```bash
+   cd /path/to/AI-Customer-Support-Copilot
+   source .venv/bin/activate
+   uvicorn api:app --reload --port 8000
+   ```
+
+   **Terminal 2 - Frontend:**
+   ```bash
+   cd /path/to/AI-Customer-Support-Copilot/frontend
+   npm run dev
+   ```
+
+5. **Access the application**
+
    Open your browser and navigate to:
    ```
-   http://localhost:8501
+   http://localhost:5173
+   ```
+
+   The API will be available at:
+   ```
+   http://localhost:8000
    ```
 
 ## 📖 Usage Workflow
 
 ### Step 1: Upload Documents
-- Use the drag-and-drop interface in the sidebar
+- Use the drag-and-drop interface on the main page
 - Upload one or more PDF or TXT files
 - Supported formats: `.pdf`, `.txt`
+- View selected files and their sizes before uploading
 
 ### Step 2: Build Knowledge Base
-- Click "Build knowledge base from uploads"
+- Click "Build knowledge base" after uploading documents
 - The system processes documents through the ingestion pipeline
 - Documents are chunked, embedded, and stored in the vector database
+- Status indicator shows when the knowledge base is ready
 
 ### Step 3: Ask Questions
-- Type your question in the chat interface
+- Type your question in the chat input
+- Press Enter to send, Shift + Enter for new line
 - The system retrieves relevant document chunks
 - Answers are generated using only the uploaded content
+- Copy answers with the copy button
 
 ### Step 4: Manage Session
+- Use "New conversation" to start fresh
 - Use "Clear chat" to reset conversation history
 - Rebuild the knowledge base anytime with new documents
+- View uploaded documents in the sidebar
 
 ## 🔧 Technical Implementation
 
@@ -186,6 +248,28 @@ graph TD
 - **Flow**: Question → Retrieval → Context Assembly → LLM → Answer
 - **Error Handling**: Validation of API tokens and configuration
 
+### 9. API Layer (`api.py`)
+- **Framework**: FastAPI
+- **Endpoints**:
+  - `POST /api/documents/upload` - Upload PDF/TXT documents
+  - `POST /api/knowledge-base/build` - Build vector store from uploaded documents
+  - `GET /api/knowledge-base/status` - Check knowledge base readiness
+  - `POST /api/chat` - Submit questions and receive answers
+  - `DELETE /api/chat/{session_id}` - Clear chat history
+- **Features**: CORS support, Pydantic validation, error handling
+
+### 10. Frontend Architecture (`frontend/`)
+- **Framework**: React 18 with TypeScript
+- **State Management**: React hooks (useState, useEffect)
+- **API Communication**: Axios with typed interfaces
+- **Styling**: Tailwind CSS with custom color palette
+- **Components**:
+  - Sidebar - Document list and navigation
+  - ChatInterface - Message display with copy functionality
+  - ChatInput - Multiline input with keyboard shortcuts
+  - DocumentUpload - Drag-and-drop file upload
+  - BuildButton - Knowledge base creation trigger
+
 ## 🧪 Testing
 
 Run the test suite to verify functionality:
@@ -205,10 +289,13 @@ Current test coverage includes:
 - **Grounded Responses**: Answers strictly based on uploaded content
 - **Multi-Document Support**: Process multiple files simultaneously
 - **Real-Time Processing**: Immediate vector store creation
-- **Interactive Interface**: Intuitive chat-based UI
+- **Modern UI**: Clean, professional React + TypeScript interface
 - **Session Management**: Clear chat history and rebuild knowledge base
 - **File Format Support**: PDF and TXT document processing
 - **Drag-and-Drop**: Modern file upload experience
+- **Copy Functionality**: Easily copy assistant responses
+- **Keyboard Shortcuts**: Enter to send, Shift+Enter for new line
+- **Status Indicators**: Real-time knowledge base status display
 
 ## 🔐 Security Considerations
 
@@ -228,25 +315,40 @@ Current test coverage includes:
 
 ## 🐛 Troubleshooting
 
-### Application fails to start
+### Backend fails to start
 - Verify Python version (3.8+ required)
 - Ensure all dependencies are installed: `pip install -r requirements.txt`
 - Check virtual environment activation
+- Confirm `.env` file exists with valid `HF_TOKEN`
+
+### Frontend fails to start
+- Verify Node.js version (18+ required)
+- Ensure dependencies are installed: `npm install` in the frontend directory
+- Check that the backend is running on port 8000
+- Verify `VITE_API_BASE_URL` in frontend `.env` file
 
 ### Questions not being answered
-- Confirm `.env` file exists with valid `HF_TOKEN`
+- Confirm backend `.env` file exists with valid `HF_TOKEN`
 - Verify Hugging Face token has appropriate permissions
 - Check internet connectivity for API access
+- Ensure knowledge base has been built after uploading documents
 
 ### File upload issues
 - Ensure files are valid PDF or TXT format
 - Check file size (very large files may timeout)
 - Verify file encoding for TXT files (UTF-8 recommended)
+- Check backend is running and accepting requests
 
 ### Vector store errors
 - Rebuild knowledge base after uploading new files
 - Check memory availability for large document sets
 - Verify document content is not empty
+- Check backend logs for specific error messages
+
+### CORS errors
+- Verify frontend is configured to use the correct API URL
+- Check that backend CORS middleware allows the frontend origin
+- Ensure both services are running on expected ports
 
 ## 🔄 Development Workflow
 
@@ -304,7 +406,10 @@ This project is provided as-is for educational and commercial use. Please ensure
 - **LangChain**: For the powerful orchestration framework
 - **Hugging Face**: For embedding models and LLM access
 - **FAISS**: For efficient similarity search
-- **Streamlit**: For the intuitive web interface
+- **FastAPI**: For the modern Python web framework
+- **React**: For the frontend library
+- **Vite**: For the fast build tool
+- **Tailwind CSS**: For the utility-first CSS framework
 
 
 ---
