@@ -121,9 +121,7 @@ function App() {
                     Document-based Question Answering
                   </h2>
                   <p className="text-muted">
-                    Upload your PDF or TXT documents to create a knowledge base,
-                    then ask questions that will be answered using only the
-                    information in your files.
+                    Upload your documents to build a knowledge base and start asking questions.
                   </p>
                 </div>
 

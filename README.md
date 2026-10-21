@@ -1,13 +1,14 @@
 # AI Customer Support Copilot
 
-A professional RAG-based customer support assistant that enables users to upload their own PDF/TXT documents and ask questions based exclusively on those uploaded files. This document-specific support system allows for dynamic knowledge base creation without requiring a fixed company documentation folder.
+A professional RAG-based customer support assistant that lets users upload their own **PDF, TXT, CSV, XLSX and DOCX** documents and ask questions based exclusively on those uploaded files. This document-specific support system allows dynamic knowledge base creation without requiring a fixed company documentation folder.
 
 ## 🌟 Project Overview
 
-AI Customer Support Copilot is a sophisticated Retrieval-Augmented Generation (RAG) application that combines modern natural language processing techniques with an intuitive web interface. The system processes uploaded documents, creates vector embeddings, and enables intelligent question-answering grounded strictly in the provided content.
+AI Customer Support Copilot is a Retrieval-Augmented Generation (RAG) application that combines modern natural language processing techniques with an intuitive web interface. The system processes uploaded documents, creates vector embeddings, and enables question-answering grounded strictly in the provided content.
 
 This project demonstrates practical implementation of:
-- Document ingestion and processing pipelines
+
+- Multi-format document ingestion and processing pipelines
 - Vector similarity search using FAISS
 - Context-aware LLM responses via LangChain
 - Modern React + TypeScript frontend with Tailwind CSS
@@ -21,58 +22,79 @@ The application follows a modular architecture with clear separation of concerns
 AI-Customer-Support-Copilot/
 ├── api.py                      # FastAPI backend wrapper
 ├── requirements.txt            # Python dependencies
-├── .env.example               # Environment configuration template
-├── README.md                  # This file
-├── src/                       # Core application modules
+├── .env.example                # Environment configuration template
+├── README.md                   # This file
+├── src/                        # Core application modules
 │   ├── __init__.py
-│   ├── ingestion.py          # Document loading and chunking
-│   ├── embeddings.py         # Text embedding generation
-│   ├── vectorstore.py        # FAISS vector database management
-│   ├── retriever.py          # Similarity search and retrieval
-│   ├── prompts.py            # LLM prompt templates
-│   ├── llm.py                # Hugging Face LLM integration
-│   └── rag_pipeline.py       # End-to-end RAG pipeline orchestration
-├── tests/                     # Unit tests
+│   ├── ingestion.py            # Multi-format document loading and chunking
+│   ├── embeddings.py           # Text embedding generation
+│   ├── vectorstore.py          # FAISS vector database management
+│   ├── retriever.py            # Similarity search and retrieval
+│   ├── prompts.py              # LLM prompt templates
+│   ├── llm.py                  # Hugging Face LLM integration
+│   └── rag_pipeline.py         # End-to-end RAG pipeline orchestration
+├── tests/                      # Unit tests
 │   ├── __init__.py
 │   └── test_document_ingestion.py
-├── frontend/                  # React + TypeScript frontend
+├── frontend/                   # React + TypeScript frontend
 │   ├── src/
-│   │   ├── components/       # React components
-│   │   │   ├── layout/       # Layout components (Sidebar)
-│   │   │   ├── chat/         # Chat components
-│   │   │   ├── documents/    # Document upload components
-│   │   │   └── ui/           # UI components
-│   │   ├── services/         # API service layer
-│   │   ├── types/            # TypeScript types
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── utils/            # Utility functions
-│   │   ├── App.tsx           # Main application component
-│   │   └── main.tsx          # Application entry point
-│   ├── package.json          # Frontend dependencies
-│   ├── vite.config.ts        # Vite configuration
-│   ├── tailwind.config.js    # Tailwind CSS configuration
-│   └── .env.example          # Frontend environment template
-└── data/                      # Data directory (legacy, not actively used)
+│   │   ├── components/         # React components
+│   │   │   ├── layout/         # Layout components (Sidebar)
+│   │   │   ├── chat/           # Chat components
+│   │   │   ├── documents/      # Document upload components
+│   │   │   └── ui/             # UI components
+│   │   ├── services/           # API service layer
+│   │   ├── types/              # TypeScript types
+│   │   ├── hooks/              # Custom React hooks
+│   │   ├── utils/              # Utility functions
+│   │   ├── App.tsx             # Main application component
+│   │   └── main.tsx            # Application entry point
+│   ├── package.json            # Frontend dependencies
+│   ├── vite.config.ts          # Vite configuration
+│   ├── tailwind.config.js      # Tailwind CSS configuration
+│   └── .env.example            # Frontend environment template
+└── data/                       # Data directory (legacy, not actively used)
     └── knowledge_base/
 ```
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **HTTP Client**: Axios
+
+- **Framework:** React 18 with TypeScript
+- **Build Tool:** Vite
+- **Styling:** Tailwind CSS
+- **Icons:** Lucide React
+- **HTTP Client:** Axios
 
 ### Backend
-- **API Layer**: FastAPI
-- **Python Version**: 3.8+
-- **LLM Framework**: LangChain - Orchestration and pipeline management
-- **Embeddings**: Hugging Face sentence-transformers
-- **Vector Database**: FAISS (Facebook AI Similarity Search)
-- **Document Processing**: PyPDF, LangChain document loaders
-- **Environment Management**: python-dotenv
+
+- **API Layer:** FastAPI
+- **Python Version:** 3.8+
+- **LLM Framework:** LangChain (orchestration and pipeline management)
+- **Embeddings:** Hugging Face sentence-transformers
+- **Vector Database:** FAISS (Facebook AI Similarity Search)
+- **Document Processing:**
+  - PDF: PyPDF via LangChain's `PyPDFLoader`
+  - TXT: Python built-in decoding
+  - CSV: Python built-in `csv` module
+  - XLSX: `openpyxl`
+  - DOCX: `python-docx`
+- **Environment Management:** python-dotenv
+
+## 📄 Supported File Formats
+
+| Format | Extension | How it is processed |
+|--------|-----------|---------------------|
+| PDF | `.pdf` | Text extracted page by page; source filename kept in metadata |
+| Plain text | `.txt` | Decoded as UTF-8 |
+| CSV | `.csv` | UTF-8 with cp1252 fallback; delimiter detected automatically; each row converted to a self-contained line |
+| Excel | `.xlsx` | One document per sheet (sheet name stored in metadata); empty sheets skipped; each row converted to a self-contained line |
+| Word | `.docx` | Paragraphs and tables read in document order |
+
+**Not supported:** legacy `.doc` and `.xls` files. The API rejects them with a message asking the user to re-save as `.docx` / `.xlsx`.
+
+**Spreadsheet note:** formula cells return the value Excel last saved. If a file was generated by a script and never opened in Excel, formula cells may be empty.
 
 ## 🚀 Quick Start
 
@@ -81,17 +103,19 @@ AI-Customer-Support-Copilot/
 - Python 3.8 or higher
 - Node.js 18+ and npm
 - pip package manager
-- Hugging Face API token ([Get one here](https://huggingface.co/settings/tokens))
+- Hugging Face API token ([get one here](https://huggingface.co/settings/tokens))
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/AnmolCanCodes/AI-Customer-Support-Copilot.git
    cd AI-Customer-Support-Copilot
    ```
 
-2. **Backend Setup**
+2. **Backend setup**
+
    ```bash
    # Create virtual environment
    python -m venv .venv
@@ -105,11 +129,13 @@ AI-Customer-Support-Copilot/
    ```
 
    Edit the `.env` file and add your Hugging Face token:
-   ```env
+
+   ```
    HF_TOKEN=your_huggingface_token_here
    ```
 
-3. **Frontend Setup**
+3. **Frontend setup**
+
    ```bash
    cd frontend
 
@@ -121,20 +147,23 @@ AI-Customer-Support-Copilot/
    ```
 
    The frontend `.env` file should contain:
-   ```env
+
+   ```
    VITE_API_BASE_URL=http://localhost:8000
    ```
 
-4. **Run the Application**
+4. **Run the application**
 
-   **Terminal 1 - Backend:**
+   Terminal 1 - Backend:
+
    ```bash
    cd /path/to/AI-Customer-Support-Copilot
    source .venv/bin/activate
    uvicorn api:app --reload --port 8000
    ```
 
-   **Terminal 2 - Frontend:**
+   Terminal 2 - Frontend:
+
    ```bash
    cd /path/to/AI-Customer-Support-Copilot/frontend
    npm run dev
@@ -142,40 +171,37 @@ AI-Customer-Support-Copilot/
 
 5. **Access the application**
 
-   Open your browser and navigate to:
-   ```
-   http://localhost:5173
-   ```
-
-   The API will be available at:
-   ```
-   http://localhost:8000
-   ```
+   Open your browser and navigate to `http://localhost:5173`. The API is available at `http://localhost:8000`.
 
 ## 📖 Usage Workflow
 
 ### Step 1: Upload Documents
+
 - Use the drag-and-drop interface on the main page
-- Upload one or more PDF or TXT files
-- Supported formats: `.pdf`, `.txt`
+- Upload one or more files
+- Supported formats: `.pdf`, `.txt`, `.csv`, `.xlsx`, `.docx`
 - View selected files and their sizes before uploading
+- Maximum file size: 25 MB per file
 
 ### Step 2: Build Knowledge Base
-- Click "Build knowledge base" after uploading documents
+
+- Click **Build knowledge base** after uploading documents
 - The system processes documents through the ingestion pipeline
 - Documents are chunked, embedded, and stored in the vector database
-- Status indicator shows when the knowledge base is ready
+- A status indicator shows when the knowledge base is ready
 
 ### Step 3: Ask Questions
+
 - Type your question in the chat input
-- Press Enter to send, Shift + Enter for new line
+- Press `Enter` to send, `Shift + Enter` for a new line
 - The system retrieves relevant document chunks
 - Answers are generated using only the uploaded content
 - Copy answers with the copy button
 
 ### Step 4: Manage Session
-- Use "New conversation" to start fresh
-- Use "Clear chat" to reset conversation history
+
+- Use **New conversation** to start fresh
+- Use **Clear chat** to reset conversation history
 - Rebuild the knowledge base anytime with new documents
 - View uploaded documents in the sidebar
 
@@ -185,88 +211,99 @@ AI-Customer-Support-Copilot/
 
 The application implements a complete RAG pipeline with the following stages:
 
-```mermaid
-graph TD
-    A[User Uploads Documents] --> B[Document Ingestion]
-    B --> C[Text Chunking]
-    C --> D[Embedding Generation]
-    D --> E[Vector Store Creation]
-    E --> F[Knowledge Base Ready]
-    
-    G[User Question] --> H[Query Embedding]
-    H --> I[Similarity Search]
-    I --> J[Relevant Chunk Retrieval]
-    J --> K[Context Assembly]
-    K --> L[LLM Generation]
-    L --> M[Grounded Answer]
-    
-    F -.-> I
+```
+Upload → Format-specific loader → Chunking → Embeddings → FAISS index
+                                                              ↓
+              Answer ← LLM ← Prompt + context ← Retrieval ← Question
 ```
 
 ### Core Components
 
 #### 1. Document Ingestion (`src/ingestion.py`)
-- **File Processing**: Handles PDF and TXT file uploads
-- **Content Extraction**: Uses PyPDF for PDF parsing, text decoding for TXT files
-- **Metadata Management**: Preserves source file information
-- **Error Handling**: Graceful handling of encoding issues and malformed files
+
+- **Loader registry:** a `LOADERS` dictionary maps each file extension to a loader function. Supporting a new format means writing one loader and adding one entry.
+- **In-memory parsing:** CSV, XLSX and DOCX are parsed directly from the uploaded bytes (`io.BytesIO`). PDFs use a short-lived temporary file that is deleted immediately after loading.
+- **Tabular data handling:** every CSV/XLSX row (and every DOCX table row) is converted into a self-contained line that carries its column names, for example:
+
+  ```
+  Product: Phone X | Price: 19999 | Stock: 12
+  ```
+
+  This keeps each chunk meaningful when retrieved, even if the chunk contains only part of a table. Empty cells and fully empty rows are skipped.
+- **Safety cap:** at most `MAX_ROWS_PER_SHEET` (10,000) rows are read per sheet or CSV file so very large spreadsheets cannot hang ingestion.
+- **Metadata:** the source filename is always preserved; XLSX documents also store the sheet name.
+- **Error handling:** unreadable or corrupt files raise a clear `ValueError` naming the file. Encoding problems are handled gracefully.
+- **Exports:** `SUPPORTED_EXTENSIONS` is exported and reused by the API layer, so the supported list lives in one place.
 
 #### 2. Text Chunking (`src/ingestion.py`)
-- **Strategy**: Recursive character text splitting
-- **Configuration**: 200-character chunks with no overlap
-- **Purpose**: Optimal sizing for embedding and retrieval
+
+- **Strategy:** Recursive character text splitting
+- **Configuration:** 800-character chunks with 100-character overlap
+- **Purpose:** Chunks large enough to hold complete ideas, with overlap so context is not lost at chunk boundaries
 
 #### 3. Embedding Generation (`src/embeddings.py`)
-- **Model**: Hugging Face sentence-transformers
-- **Output**: Dense vector representations of text chunks
-- **Usage**: Enables semantic similarity search
+
+- **Model:** Hugging Face sentence-transformers
+- **Output:** Dense vector representations of text chunks
+- **Usage:** Enables semantic similarity search
 
 #### 4. Vector Store (`src/vectorstore.py`)
-- **Technology**: FAISS (Facebook AI Similarity Search)
-- **Function**: Efficient similarity search and clustering
-- **Storage**: In-memory vector index for fast retrieval
+
+- **Technology:** FAISS (Facebook AI Similarity Search)
+- **Function:** Efficient similarity search and clustering
+- **Storage:** In-memory vector index for fast retrieval
 
 #### 5. Retrieval System (`src/retriever.py`)
-- **Mechanism**: Semantic similarity search
-- **Output**: Top-k most relevant document chunks
-- **Configuration**: Configurable number of retrieved chunks
+
+- **Mechanism:** Semantic similarity search
+- **Output:** Top-k most relevant document chunks
+- **Configuration:** Configurable number of retrieved chunks
 
 #### 6. LLM Integration (`src/llm.py`)
-- **Provider**: Hugging Face Inference API
-- **Model**: State-of-the-art language model
-- **Authentication**: Token-based API access
+
+- **Provider:** Hugging Face Inference API
+- **Authentication:** Token-based API access
 
 #### 7. Prompt Engineering (`src/prompts.py`)
-- **Template**: Context-aware prompt construction
-- **Components**: System instructions, retrieved context, user question
-- **Goal**: Ensure responses are grounded in provided documents
+
+- **Template:** Context-aware prompt construction
+- **Components:** System instructions, retrieved context, user question
+- **Goal:** Ensure responses are grounded in provided documents
 
 #### 8. Pipeline Orchestration (`src/rag_pipeline.py`)
-- **Framework**: LangChain RunnablePassthrough
-- **Flow**: Question → Retrieval → Context Assembly → LLM → Answer
-- **Error Handling**: Validation of API tokens and configuration
 
-### 9. API Layer (`api.py`)
-- **Framework**: FastAPI
-- **Endpoints**:
-  - `POST /api/documents/upload` - Upload PDF/TXT documents
-  - `POST /api/knowledge-base/build` - Build vector store from uploaded documents
-  - `GET /api/knowledge-base/status` - Check knowledge base readiness
-  - `POST /api/chat` - Submit questions and receive answers
-  - `DELETE /api/chat/{session_id}` - Clear chat history
-- **Features**: CORS support, Pydantic validation, error handling
+- **Framework:** LangChain `RunnablePassthrough`
+- **Flow:** Question → Retrieval → Context Assembly → LLM → Answer
+- **Error handling:** Validation of API tokens and configuration
 
-### 10. Frontend Architecture (`frontend/`)
-- **Framework**: React 18 with TypeScript
-- **State Management**: React hooks (useState, useEffect)
-- **API Communication**: Axios with typed interfaces
-- **Styling**: Tailwind CSS with custom color palette
-- **Components**:
-  - Sidebar - Document list and navigation
-  - ChatInterface - Message display with copy functionality
-  - ChatInput - Multiline input with keyboard shortcuts
-  - DocumentUpload - Drag-and-drop file upload
-  - BuildButton - Knowledge base creation trigger
+#### 9. API Layer (`api.py`)
+
+- **Framework:** FastAPI
+- **Endpoints:**
+  - `POST /api/documents/upload`: upload PDF, TXT, CSV, XLSX and DOCX documents
+  - `POST /api/knowledge-base/build`: build the vector store from uploaded documents
+  - `GET /api/knowledge-base/status`: check knowledge base readiness
+  - `POST /api/chat`: submit questions and receive answers
+  - `DELETE /api/chat/{session_id}`: clear chat history
+- **Upload validation:**
+  - Unsupported extensions return `400` with the list of supported types
+  - Legacy `.doc` / `.xls` return `400` with a hint to re-save as `.docx` / `.xlsx`
+  - Files over 25 MB return `413`
+- **Features:** CORS support, Pydantic validation, error handling
+
+#### 10. Frontend Architecture (`frontend/`)
+
+- **Framework:** React 18 with TypeScript
+- **State management:** React hooks (`useState`, `useEffect`)
+- **API communication:** Axios with typed interfaces
+- **Styling:** Tailwind CSS with custom color palette
+- **File validation:** the upload component filters by file extension (not MIME type, which browsers report inconsistently for Office files)
+- **Components:**
+  - `Sidebar`: document list and navigation
+  - `ChatInterface`: message display with copy functionality
+  - `ChatInput`: multiline input with keyboard shortcuts
+  - `DocumentUpload`: drag-and-drop file upload
+  - `BuildButton`: knowledge base creation trigger
 
 ## 🧪 Testing
 
@@ -277,78 +314,108 @@ python -m unittest discover -s tests -v
 ```
 
 Current test coverage includes:
-- Document ingestion from uploaded files
-- File format validation
-- Content extraction accuracy
+
+- Text file ingestion
+- CSV ingestion: column names kept per row, empty cells skipped, non-UTF-8 fallback
+- XLSX ingestion: one document per sheet, sheet metadata, empty sheets skipped
+- DOCX ingestion: paragraphs and tables
+- Unsupported extensions skipped and corrupt files raising a clear error
+- Chunk size limit (800 characters) respected on tabular data
+- Chat error handling for Hugging Face credit/payment errors
 
 ## 📊 Key Features
 
-- **Dynamic Knowledge Base**: Upload and process documents on-demand
-- **Grounded Responses**: Answers strictly based on uploaded content
-- **Multi-Document Support**: Process multiple files simultaneously
-- **Real-Time Processing**: Immediate vector store creation
-- **Modern UI**: Clean, professional React + TypeScript interface
-- **Session Management**: Clear chat history and rebuild knowledge base
-- **File Format Support**: PDF and TXT document processing
-- **Drag-and-Drop**: Modern file upload experience
-- **Copy Functionality**: Easily copy assistant responses
-- **Keyboard Shortcuts**: Enter to send, Shift+Enter for new line
-- **Status Indicators**: Real-time knowledge base status display
+- **Dynamic Knowledge Base:** upload and process documents on demand
+- **Multi-Format Support:** PDF, TXT, CSV, XLSX and DOCX
+- **Table-Aware Ingestion:** spreadsheet and table rows keep their column names for accurate retrieval
+- **Grounded Responses:** answers strictly based on uploaded content
+- **Multi-Document Support:** process multiple files simultaneously
+- **Real-Time Processing:** immediate vector store creation
+- **Modern UI:** clean, professional React + TypeScript interface
+- **Session Management:** clear chat history and rebuild the knowledge base
+- **Drag-and-Drop:** modern file upload experience
+- **Copy Functionality:** easily copy assistant responses
+- **Keyboard Shortcuts:** Enter to send, Shift+Enter for a new line
+- **Status Indicators:** real-time knowledge base status display
 
 ## 🔐 Security Considerations
 
-- **API Token Security**: Hugging Face tokens stored in environment variables
-- **No Data Persistence**: Uploaded files processed in-memory, not stored permanently
-- **Input Validation**: File type and size validation
-- **Error Handling**: Graceful degradation on API failures
+- **API token security:** Hugging Face tokens are stored in environment variables
+- **No data persistence:** uploaded files are processed in memory and not stored permanently (PDFs use a temporary file that is deleted right after loading)
+- **Input validation:** file type is validated against an allow-list, and files over 25 MB are rejected
+- **Resource limits:** spreadsheet rows are capped per sheet to prevent runaway processing
+- **Error handling:** graceful degradation on API failures
 
 ## 🎯 Use Cases
 
-- **Document Q&A**: Query technical documentation, manuals, or policy documents
-- **Research Assistant**: Analyze research papers and extract information
-- **Knowledge Base**: Create temporary reference systems from uploaded documents
-- **Customer Support**: Build support systems from product documentation
-- **Legal Review**: Query legal documents and contracts
-- **Educational Tool**: Study and question textbooks or course materials
+- **Document Q&A:** query technical documentation, manuals, or policy documents
+- **Product and Pricing Data:** ask questions about catalogs, price lists and inventory sheets (CSV/XLSX)
+- **Research Assistant:** analyze research papers and extract information
+- **Knowledge Base:** create temporary reference systems from uploaded documents
+- **Customer Support:** build support systems from product documentation and FAQ sheets
+- **Legal Review:** query legal documents and contracts (PDF/DOCX)
+- **Educational Tool:** study and question textbooks or course materials
 
 ## 🐛 Troubleshooting
 
 ### Backend fails to start
+
 - Verify Python version (3.8+ required)
 - Ensure all dependencies are installed: `pip install -r requirements.txt`
 - Check virtual environment activation
-- Confirm `.env` file exists with valid `HF_TOKEN`
+- Confirm the `.env` file exists with a valid `HF_TOKEN`
 
 ### Frontend fails to start
+
 - Verify Node.js version (18+ required)
-- Ensure dependencies are installed: `npm install` in the frontend directory
+- Ensure dependencies are installed: `npm install` in the `frontend` directory
 - Check that the backend is running on port 8000
-- Verify `VITE_API_BASE_URL` in frontend `.env` file
+- Verify `VITE_API_BASE_URL` in the frontend `.env` file
 
 ### Questions not being answered
-- Confirm backend `.env` file exists with valid `HF_TOKEN`
-- Verify Hugging Face token has appropriate permissions
+
+- Confirm the backend `.env` file exists with a valid `HF_TOKEN`
+- Verify the Hugging Face token has appropriate permissions and remaining credits
 - Check internet connectivity for API access
-- Ensure knowledge base has been built after uploading documents
+- Ensure the knowledge base has been built after uploading documents
 
 ### File upload issues
-- Ensure files are valid PDF or TXT format
-- Check file size (very large files may timeout)
-- Verify file encoding for TXT files (UTF-8 recommended)
-- Check backend is running and accepting requests
+
+- Ensure files are one of: PDF, TXT, CSV, XLSX, DOCX
+- Legacy `.doc` and `.xls` files must be re-saved as `.docx` / `.xlsx`
+- Files larger than 25 MB are rejected
+- Verify encoding for TXT files (UTF-8 recommended; CSV falls back to cp1252 automatically)
+- Check that the backend is running and accepting requests
+
+### Spreadsheet or Word file problems
+
+- **"Could not read <file>" error:** the file is likely corrupt or password-protected; re-save it without a password
+- **Empty formula cells in XLSX:** open and save the file in Excel once so computed values are stored
+- **Missing rows:** only the first 10,000 rows per sheet are read
+- **Empty sheets or documents:** these are skipped; if every file is empty, the build fails with "No supported content was found"
 
 ### Vector store errors
-- Rebuild knowledge base after uploading new files
+
+- Rebuild the knowledge base after uploading new files
 - Check memory availability for large document sets
 - Verify document content is not empty
 - Check backend logs for specific error messages
 
 ### CORS errors
-- Verify frontend is configured to use the correct API URL
-- Check that backend CORS middleware allows the frontend origin
-- Ensure both services are running on expected ports
+
+- Verify the frontend is configured to use the correct API URL
+- Check that the backend CORS middleware allows the frontend origin
+- Ensure both services are running on the expected ports
 
 ## 🔄 Development Workflow
+
+### Adding a New File Format
+
+1. Write a loader in `src/ingestion.py` with the signature `(file_bytes, file_name) -> list[Document]`
+2. Add it to the `LOADERS` dictionary (this also updates `SUPPORTED_EXTENSIONS` used by the API)
+3. Add the new library to `requirements.txt`
+4. Add the extension to the frontend `SUPPORTED_EXTENSIONS` list and `accept` attribute in `DocumentUpload.tsx`
+5. Add tests in `tests/test_document_ingestion.py`
 
 ### Adding New Features
 
@@ -376,10 +443,11 @@ python -m unittest discover -s tests -v
 
 ## 📈 Performance Considerations
 
-- **Chunk Size**: Current 200-character chunks balance retrieval accuracy and performance
-- **Vector Store**: In-memory FAISS provides fast retrieval for moderate document sets
-- **API Latency**: Response time depends on Hugging Face API performance
-- **File Processing**: Large PDFs may take longer to process
+- **Chunk size:** 800-character chunks with 100-character overlap balance retrieval accuracy and context preservation
+- **Vector store:** in-memory FAISS provides fast retrieval for moderate document sets
+- **Spreadsheets:** XLSX files are read in streaming (read-only) mode, and rows are capped per sheet
+- **API latency:** response time depends on Hugging Face API performance
+- **File processing:** large PDFs and spreadsheets may take longer to process
 
 ## 🤝 Contributing
 
@@ -389,27 +457,25 @@ Contributions are welcome! Please follow these guidelines:
 2. Create a feature branch
 3. Make your changes with appropriate tests
 4. Ensure all tests pass
-5. Submit a pull request with clear description
+5. Submit a pull request with a clear description
 
 ## 📝 License
 
 This project is provided as-is for educational and commercial use. Please ensure compliance with:
+
 - Hugging Face model licenses
 - FAISS license terms
 - LangChain license requirements
+- openpyxl and python-docx license terms
 - Any applicable data privacy regulations
 
 ## 🙏 Acknowledgments
 
-- **LangChain**: For the powerful orchestration framework
-- **Hugging Face**: For embedding models and LLM access
-- **FAISS**: For efficient similarity search
-- **FastAPI**: For the modern Python web framework
-- **React**: For the frontend library
-- **Vite**: For the fast build tool
-- **Tailwind CSS**: For the utility-first CSS framework
-
-
----
-
-**Built with ❤️ using modern RAG techniques and best practices**
+- **LangChain:** for the powerful orchestration framework
+- **Hugging Face:** for embedding models and LLM access
+- **FAISS:** for efficient similarity search
+- **FastAPI:** for the modern Python web framework
+- **openpyxl** and **python-docx:** for Excel and Word parsing
+- **React:** for the frontend library
+- **Vite:** for the fast build tool
+- **Tailwind CSS:** for the utility-first CSS framework

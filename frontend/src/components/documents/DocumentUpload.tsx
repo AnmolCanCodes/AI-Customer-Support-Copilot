@@ -7,6 +7,8 @@ interface DocumentUploadProps {
   isUploading: boolean;
 }
 
+const SUPPORTED_EXTENSIONS = ['.pdf', '.txt', '.csv', '.xlsx', '.docx'];
+
 export function DocumentUpload({ onUpload, isUploading }: DocumentUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -34,15 +36,12 @@ export function DocumentUpload({ onUpload, isUploading }: DocumentUploadProps) {
   };
 
   const handleFiles = (files: File[]) => {
-    const validFiles = files.filter(
-      (file) =>
-        file.type === 'application/pdf' ||
-        file.type === 'text/plain' ||
-        file.name.endsWith('.txt')
+    const validFiles = files.filter((file) =>
+      SUPPORTED_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))
     );
 
     if (validFiles.length !== files.length) {
-      alert('Some files were skipped. Only PDF and TXT files are supported.');
+      alert('Some files were skipped. Supported types: PDF, TXT, CSV, XLSX, DOCX.');
     }
 
     const uploadedFiles: UploadedFile[] = validFiles.map((file) => ({
@@ -87,7 +86,7 @@ export function DocumentUpload({ onUpload, isUploading }: DocumentUploadProps) {
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".pdf,.txt"
+          accept=".pdf,.txt,.csv,.xlsx,.docx"
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -95,7 +94,7 @@ export function DocumentUpload({ onUpload, isUploading }: DocumentUploadProps) {
         <p className="text-charcoal mb-2">
           Drag and drop your files here, or click to browse
         </p>
-        <p className="text-sm text-muted">Supports PDF and TXT files</p>
+        <p className="text-sm text-muted">Supports PDF, TXT, CSV, XLSX and DOCX files</p>
         <button
           onClick={() => fileInputRef.current?.click()}
           className="mt-4 px-4 py-2 text-sm text-charcoal border border-gray-300 rounded hover:bg-gray-100 transition-colors"

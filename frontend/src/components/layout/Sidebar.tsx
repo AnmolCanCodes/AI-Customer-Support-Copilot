@@ -32,7 +32,12 @@ export function Sidebar({
 
   return (
     <aside className="w-64 border-r border-border bg-background h-screen flex flex-col">
-      <div className="p-4 border-b border-custom-border">
+      <div className="p-4 border-b border-custom-border flex items-center gap-3">
+        <img
+          src="/logo.png"
+          alt="Support Copilot logo"
+          className="h-9 w-9 rounded-lg object-cover shadow-sm"
+        />
         <h1 className="text-lg font-semibold text-charcoal tracking-tight">
           Support Copilot
         </h1>

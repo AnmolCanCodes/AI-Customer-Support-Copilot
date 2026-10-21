@@ -9,6 +9,16 @@ from src.ingestion import load_documents_from_uploaded_files, split_documents
 from src.rag_pipeline import create_rag_pipeline
 from src.vectorstore import create_vectorstore
 
+from pathlib import Path
+from src.ingestion import (
+    SUPPORTED_EXTENSIONS,
+    load_documents_from_uploaded_files,
+    split_documents,
+)
+
+MAX_FILE_SIZE_MB = 25
+LEGACY_EXTENSIONS = {".doc": ".docx", ".xls": ".xlsx"}
+
 
 class BufferedUpload:
     def __init__(self, name: str, content: bytes):
@@ -26,7 +36,6 @@ class BufferedUpload:
         return None
 
 
-# Global in-memory state
 vectorstore: Any = None
 chat_history: Dict[str, List[Dict[str, str]]] = {}
 _uploaded_files: List[UploadFile] = []
@@ -66,9 +75,7 @@ class StatusResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     yield
-    # Shutdown
     global vectorstore, chat_history
     vectorstore = None
     chat_history = {}
@@ -95,26 +102,36 @@ async def upload_documents(files: List[UploadFile] = File(...)):
     if not files:
         raise HTTPException(status_code=400, detail="No files provided")
 
-    # Validate file types
-    valid_extensions = {".pdf", ".txt"}
+    supported_label = ", ".join(e.lstrip(".").upper() for e in sorted(SUPPORTED_EXTENSIONS))
     buffered_files = []
     document_infos = []
 
     for file in files:
-        file_ext = file.filename.split(".")[-1].lower()
-        if f".{file_ext}" not in valid_extensions:
+        file_ext = Path(file.filename or "").suffix.lower()
+
+        if file_ext in LEGACY_EXTENSIONS:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file type: {file.filename}. Only PDF and TXT files are supported."
+                detail=(
+                    f"{file.filename}: legacy {file_ext} files are not supported. "
+                    f"Please save it as {LEGACY_EXTENSIONS[file_ext]} and upload again."
+                )
+            )
+        if file_ext not in SUPPORTED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type: {file.filename}. Supported types: {supported_label}."
             )
 
         file_bytes = await file.read()
+        if len(file_bytes) > MAX_FILE_SIZE_MB * 1024 * 1024:
+            raise HTTPException(
+                status_code=413,
+                detail=f"{file.filename} is larger than {MAX_FILE_SIZE_MB} MB."
+            )
         buffered_files.append(BufferedUpload(file.filename, file_bytes))
-        document_infos.append(
-            DocumentInfo(name=file.filename, size=len(file_bytes))
-        )
+        document_infos.append(DocumentInfo(name=file.filename, size=len(file_bytes)))
 
-    # Store uploaded files in a temporary global state for building
     global _uploaded_files
     _uploaded_files = buffered_files
 
@@ -133,7 +150,6 @@ async def build_knowledge_base():
         )
 
     try:
-        # Load documents using existing ingestion pipeline
         uploaded_documents = load_documents_from_uploaded_files(_uploaded_files)
         if not uploaded_documents:
             raise HTTPException(
@@ -141,13 +157,10 @@ async def build_knowledge_base():
                 detail="No supported content was found in the selected files."
             )
 
-        # Split documents into chunks
         chunks = split_documents(uploaded_documents)
 
-        # Create vectorstore using existing implementation
         vectorstore = create_vectorstore(chunks)
 
-        # Clear uploaded files after successful build
         _uploaded_files = []
 
         return BuildResponse(
@@ -167,8 +180,7 @@ async def get_knowledge_base_status():
     if vectorstore is None:
         return StatusResponse(ready=False)
 
-    # Note: FAISS doesn't expose document/chunk count easily after creation
-    # We return minimal info since the actual count isn't stored
+    # return minimal info since the actual count isn't stored
     return StatusResponse(ready=True)
 
 

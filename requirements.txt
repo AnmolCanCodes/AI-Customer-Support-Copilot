@@ -12,3 +12,5 @@ torchvision
 fastapi
 uvicorn
 python-multipart
+openpyxl
+python-docx
