@@ -20,8 +20,6 @@ The application follows a modular architecture with clear separation of concerns
 ```
 AI-Customer-Support-Copilot/
 ├── api.py                      # FastAPI backend wrapper
-├── app.py                      # Legacy Streamlit interface (deprecated)
-├── main.py                     # Legacy Streamlit entry point (deprecated)
 ├── requirements.txt            # Python dependencies
 ├── .env.example               # Environment configuration template
 ├── README.md                  # This file
