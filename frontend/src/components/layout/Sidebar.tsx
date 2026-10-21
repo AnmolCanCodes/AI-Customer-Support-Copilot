@@ -75,7 +75,7 @@ export function Sidebar({
                   key={index}
                   className="flex items-center gap-2 px-2 py-1.5 text-sm text-charcoal rounded hover:bg-gray-100"
                 >
-                  <FileText className="w-4 h-4 text-muted flex-shrink-0" />
+                  <FileText className="w-4 h-4 text-muted shrink-0" />
                   <span className="truncate">{doc.name}</span>
                 </div>
               ))}

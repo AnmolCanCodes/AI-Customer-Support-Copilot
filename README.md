@@ -53,8 +53,6 @@ AI-Customer-Support-Copilot/
 │   ├── vite.config.ts          # Vite configuration
 │   ├── tailwind.config.js      # Tailwind CSS configuration
 │   └── .env.example            # Frontend environment template
-└── data/                       # Data directory (legacy, not actively used)
-    └── knowledge_base/
 ```
 
 ## 🛠️ Tech Stack
