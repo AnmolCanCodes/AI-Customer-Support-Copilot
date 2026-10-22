@@ -2,6 +2,10 @@
 
 A professional RAG-based customer support assistant that lets users upload their own **PDF, TXT, CSV, XLSX and DOCX** documents and ask questions based exclusively on those uploaded files. This document-specific support system allows dynamic knowledge base creation without requiring a fixed company documentation folder.
 
+**Live demo** https://ai-customer-support-copilot-silk.vercel.app
+``` backend is running on render free tier so services spin down after 15 minutes without inbound traffic and take about 60 seconds to wake up on the next request```
+
+
 ## 🌟 Project Overview
 
 AI Customer Support Copilot is a Retrieval-Augmented Generation (RAG) application that combines modern natural language processing techniques with an intuitive web interface. The system processes uploaded documents, creates vector embeddings, and enables question-answering grounded strictly in the provided content.
